@@ -1,0 +1,26 @@
+﻿@{
+    ViewBag.Title = "Test";
+}
+
+<h2>Test</h2>
+
+<div id="captcha"></div>
+
+@section scripts {
+
+    <script type="text/javascript">
+
+        $(function () {
+
+            var captcha = new CAPTCHA({
+                selector: '#captcha',
+                text: 'hello world!'
+            });
+
+            captcha.generate();
+
+        });
+
+    </script>
+    
+}
