@@ -3,18 +3,27 @@
     var defaults = {
 
         selector: "#captcha",
-        text: "Test"
+        text: "Test",
+        width: 300,
+        height: 200,
+        colour1: "cyan",
+        colour2: "magenta",
+        font: "bold 48px Arial",
+        onSuccess: function () { alert('Correct!'); }
     };
 
     var CAPTCHA = function (config) {
+
+        var that = this;
 
         this._settings = $.extend({}, defaults, config || {});
 
         this._container = $(this._settings.selector);
 
-        this._canvas = $('<canvas>').appendTo(this._container).width(300).height(200);
-        this._input = $('<input>').appendTo(this._container);
-        this._button = $('<button>').appendTo(this._container);
+        this._canvas = $('<canvas>').appendTo(this._container).width(this._settings.width).height(this._settings.height);
+        this._input = $('<input>').addClass('user-text').appendTo(this._container);
+        this._button = $('<button>').text('submit')
+                        .addClass('validate').on('click', function () { that.validate(that._input.val()); }).appendTo(this._container);
         
         this._context = this._canvas.get(0).getContext("2d");
 
@@ -26,25 +35,63 @@
 
             var context = this._context;
 
-            var my_gradient = context.createLinearGradient(0, 0, 300, 0);
-            my_gradient.addColorStop(0, "cyan");
-            my_gradient.addColorStop(1, "magenta");
+            var gradient1 = context.createLinearGradient(0, 0, this._settings.width, 0);
+            gradient1.addColorStop(0, this._settings.colour1);
+            gradient1.addColorStop(1, this._settings.colour2);
 
-            context.fillStyle = my_gradient;
-            context.fillRect(0, 0, 300, 225)
+            context.fillStyle = gradient1;
+            context.fillRect(0, 0, this._settings.width, this._settings.height)
 
-            my_gradient = context.createLinearGradient(0, 0, 300, 0);
-            my_gradient.addColorStop(0, "magenta");
-            my_gradient.addColorStop(1, "cyan");
+            var gradient2 = context.createLinearGradient(0, 0, this._settings.width, 0);
+            gradient2.addColorStop(0, this._settings.colour2);
+            gradient2.addColorStop(1, this._settings.colour1);
 
-            context.font = "bold 48px Arial";
-            context.fillStyle = my_gradient;
-            context.setTransform(1, 0.1, -0.1, 1, 10, 75);
+            context.font = this._settings.font;
+            context.fillStyle = gradient2;
+
+            context.setTransform((Math.random() / 10) + 0.9,     //scalex
+                                0.1 - (Math.random() / 5),    //skewx
+                                0.1 - (Math.random() / 5),   //skewy
+                                (Math.random() / 10) + 0.9,      //scaley
+                                (Math.random() * 20) + 10,     //transx
+                                75);    //transy
+
             context.fillText(this._settings.text, 0, 0);
 
+            context.setTransform(1, 0, 0, 1, 0, 0);
+
+            var numRandomCurves = Math.floor((Math.random() * 6) + 5);
+
+            for (var i = 0; i < numRandomCurves; i++) {
+                this._drawRandomCurve();
+            }
         },
 
-        validate: function () { }
+        validate: function (userText) {
+            if (userText === this._settings.text) {
+                this._settings.onSuccess();
+            } else {
+                this.generate();
+            }
+        },
+
+        _drawRandomCurve: function () {
+
+            var ctx = this._context;
+
+            var gradient1 = ctx.createLinearGradient(0, 0, this._settings.width, 0);
+            gradient1.addColorStop(0, Math.random() < 0.5 ? this._settings.colour1 : this._settings.colour2);
+            gradient1.addColorStop(1, Math.random() < 0.5 ? this._settings.colour1 : this._settings.colour2);
+
+            ctx.lineWidth = Math.floor((Math.random() * 4) + 2);
+            ctx.strokeStyle = gradient1;
+            ctx.beginPath();
+            ctx.moveTo(Math.floor((Math.random() * this._settings.width)), Math.floor((Math.random() * this._settings.height)));
+            ctx.bezierCurveTo(Math.floor((Math.random() * this._settings.width)), Math.floor((Math.random() * this._settings.height)),
+                Math.floor((Math.random() * this._settings.width)), Math.floor((Math.random() * this._settings.height)),
+                Math.floor((Math.random() * this._settings.width)), Math.floor((Math.random() * this._settings.height)));
+            ctx.stroke();
+        }
 
     };
 
